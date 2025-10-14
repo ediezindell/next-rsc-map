@@ -1,0 +1,56 @@
+{
+  "name": "next-rsc-map",
+  "version": "0.1.0",
+  "description": "A CLI tool to analyze Next.js projects and map out Server/Client components.",
+  "main": "dist/index.js",
+  "bin": {
+    "next-rsc-map": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "check": "biome check --write src",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ediezindell/next-rsc-map.git"
+  },
+  "keywords": [
+    "next",
+    "nextjs",
+    "rsc",
+    "server components",
+    "client components",
+    "cli",
+    "analyzer",
+    "map"
+  ],
+  "author": "ediezindell",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ediezindell/next-rsc-map/issues"
+  },
+  "homepage": "https://github.com/ediezindell/next-rsc-map#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.5",
+    "@types/micromatch": "^4.0.9",
+    "@types/node": "^24.7.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@types/yargs": "^17.0.33",
+    "fast-glob": "^3.3.2",
+    "micromatch": "^4.0.8",
+    "ts-morph": "^27.0.0",
+    "yargs": "^18.0.0"
+  }
+}

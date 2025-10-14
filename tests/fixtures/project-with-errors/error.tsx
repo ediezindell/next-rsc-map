@@ -1,0 +1,1 @@
+const x: string = 123; // This will cause a TypeScript type error
