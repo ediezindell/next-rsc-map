@@ -6,11 +6,10 @@ export class DependencyTracer {
 		targetFile: string,
 	): string[] | null {
 		const startNode = graph.get(targetFile);
-		if (!startNode) {
+		if (!startNode || !startNode.isClient) {
 			return null;
 		}
 
-		// Breadth-First Search to find the shortest path to a client root
 		const queue: { path: string; chain: string[] }[] = [
 			{ path: targetFile, chain: [targetFile] },
 		];
@@ -26,16 +25,15 @@ export class DependencyTracer {
 
 			if (currentNode?.isClientRoot) {
 				// We found the root of the client component chain.
-				// The chain is from target -> root, so we reverse it to show root -> target.
-				return currentChain.reverse();
+				return currentChain;
 			}
 
 			if (currentNode) {
-				for (const dependencyPath of currentNode.dependencies) {
-					if (!visited.has(dependencyPath)) {
-						visited.add(dependencyPath);
-						const newChain = [...currentChain, dependencyPath];
-						queue.push({ path: dependencyPath, chain: newChain });
+				for (const importerPath of currentNode.importedBy) {
+					if (!visited.has(importerPath)) {
+						visited.add(importerPath);
+						const newChain = [importerPath, ...currentChain];
+						queue.push({ path: importerPath, chain: newChain });
 					}
 				}
 			}

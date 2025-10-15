@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ComponentClassifier, ComponentType } from "./classifier";
+import { ComponentClassifier } from "./classifier";
 import type { DependencyNode } from "./types";
 
 describe("ComponentClassifier", () => {
@@ -11,7 +11,7 @@ describe("ComponentClassifier", () => {
 			[
 				"component-a.ts",
 				{
-					filePath: "component-a.ts",
+					path: "component-a.ts",
 					dependencies: ["client-util.ts"],
 					importedBy: [],
 					isClient: false,
@@ -21,7 +21,7 @@ describe("ComponentClassifier", () => {
 			[
 				"client-util.ts",
 				{
-					filePath: "client-util.ts",
+					path: "client-util.ts",
 					dependencies: [],
 					importedBy: ["component-a.ts"],
 					isClient: false,
@@ -31,7 +31,7 @@ describe("ComponentClassifier", () => {
 			[
 				"server-component.ts",
 				{
-					filePath: "server-component.ts",
+					path: "server-component.ts",
 					dependencies: [],
 					importedBy: [],
 					isClient: false,
@@ -44,9 +44,9 @@ describe("ComponentClassifier", () => {
 		const result = classifier.classify(graph);
 
 		// Assert
-		expect(result.get("client-util.ts")?.type).toBe(ComponentType.Client);
-		expect(result.get("component-a.ts")?.type).toBe(ComponentType.Server); // Should NOT be propagated upwards
-		expect(result.get("server-component.ts")?.type).toBe(ComponentType.Server);
+		expect(result.get("client-util.ts")?.isClient).toBe(true);
+		expect(result.get("component-a.ts")?.isClient).toBe(false); // Should NOT be propagated upwards
+		expect(result.get("server-component.ts")?.isClient).toBe(false);
 	});
 
 	it("should classify a component imported BY a client component as client", () => {
@@ -55,7 +55,7 @@ describe("ComponentClassifier", () => {
 			[
 				"client-root.ts",
 				{
-					filePath: "client-root.ts",
+					path: "client-root.ts",
 					dependencies: ["client-dependency.ts"],
 					importedBy: [],
 					isClient: false,
@@ -65,7 +65,7 @@ describe("ComponentClassifier", () => {
 			[
 				"client-dependency.ts",
 				{
-					filePath: "client-dependency.ts",
+					path: "client-dependency.ts",
 					dependencies: [],
 					importedBy: ["client-root.ts"],
 					isClient: false,
@@ -78,8 +78,8 @@ describe("ComponentClassifier", () => {
 		const result = classifier.classify(graph);
 
 		// Assert
-		expect(result.get("client-root.ts")?.type).toBe(ComponentType.Client);
-		expect(result.get("client-dependency.ts")?.type).toBe(ComponentType.Client); // Should be propagated downwards
+		expect(result.get("client-root.ts")?.isClient).toBe(true);
+		expect(result.get("client-dependency.ts")?.isClient).toBe(true); // Should be propagated downwards
 	});
 
 	it("should classify components without directives or imports as Server Components", () => {
@@ -88,7 +88,7 @@ describe("ComponentClassifier", () => {
 			[
 				"component.ts",
 				{
-					filePath: "component.ts",
+					path: "component.ts",
 					dependencies: [],
 					importedBy: [],
 					isClient: false,
@@ -101,6 +101,6 @@ describe("ComponentClassifier", () => {
 		const result = classifier.classify(graph);
 
 		// Assert
-		expect(result.get("component.ts")?.type).toBe(ComponentType.Server);
+		expect(result.get("component.ts")?.isClient).toBe(false);
 	});
 });

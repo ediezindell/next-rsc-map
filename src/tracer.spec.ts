@@ -3,6 +3,56 @@ import { DependencyTracer } from "./tracer";
 import type { DependencyNode } from "./types";
 
 describe("DependencyTracer", () => {
+	it("should return null for a Server Component that imports a Client Component indirectly", () => {
+		// Arrange
+		const projectRoot = "/test-project";
+		const serverPagePath = `${projectRoot}/server-page.tsx`;
+		const serverLayoutPath = `${projectRoot}/server-layout.tsx`;
+		const clientComponentPath = `${projectRoot}/client-component.tsx`;
+
+		const mockGraph = new Map<string, DependencyNode>([
+			[
+				serverPagePath,
+				{
+					path: serverPagePath,
+					dependencies: [serverLayoutPath], // Imports server-layout
+					importedBy: [],
+					isClient: false,
+					isClientRoot: false,
+				},
+			],
+			[
+				serverLayoutPath,
+				{
+					path: serverLayoutPath,
+					dependencies: [clientComponentPath], // Imports client-component
+					importedBy: [serverPagePath],
+					isClient: false,
+					isClientRoot: false,
+				},
+			],
+			[
+				clientComponentPath,
+				{
+					path: clientComponentPath,
+					dependencies: [],
+					importedBy: [serverLayoutPath],
+					isClient: true,
+					isClientRoot: true, // The "use client" boundary
+				},
+			],
+		]);
+
+		const tracer = new DependencyTracer();
+		const targetFile = serverPagePath;
+
+		// Act
+		const chain = tracer.traceToClientRoot(mockGraph, targetFile);
+
+		// Assert
+		expect(chain).toBeNull();
+	});
+
 	it("should trace the shortest path back to a client root", () => {
 		// Arrange
 		const projectRoot = "/home/edie/git/next-rsc-map";
@@ -11,23 +61,24 @@ describe("DependencyTracer", () => {
 		const componentBPath = `${projectRoot}/src/components/component-b.tsx`;
 		const serverComponentPath = `${projectRoot}/src/components/server-component.tsx`;
 
+		// This graph represents the chain: page.tsx -> component-a.tsx -> component-b.tsx
 		const mockGraph = new Map<string, DependencyNode>([
 			[
 				pagePath,
 				{
 					path: pagePath,
-					dependencies: [],
-					importedBy: [componentAPath],
+					dependencies: [componentAPath],
+					importedBy: [],
 					isClient: true,
-					isClientRoot: true, // This is the root cause
+					isClientRoot: true, // The root of the chain
 				},
 			],
 			[
 				componentAPath,
 				{
 					path: componentAPath,
-					dependencies: [pagePath],
-					importedBy: [componentBPath],
+					dependencies: [componentBPath],
+					importedBy: [pagePath],
 					isClient: true,
 					isClientRoot: false,
 				},
@@ -36,8 +87,8 @@ describe("DependencyTracer", () => {
 				componentBPath,
 				{
 					path: componentBPath,
-					dependencies: [componentAPath],
-					importedBy: [],
+					dependencies: [],
+					importedBy: [componentAPath],
 					isClient: true,
 					isClientRoot: false,
 				},

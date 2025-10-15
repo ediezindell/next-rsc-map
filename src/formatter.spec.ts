@@ -1,29 +1,43 @@
 import * as path from "node:path";
 import { describe, expect, it } from "vitest";
-import { type ClassifiedComponent, ComponentType } from "./classifier";
 import { OutputFormatter } from "./formatter";
+import type { DependencyNode } from "./types";
 
 describe("OutputFormatter", () => {
 	it("should format a simple component map into a tree", () => {
 		// Arrange
 		const projectPath = path.resolve("/test-project");
-		const components = new Map<string, ClassifiedComponent>([
+		const pagePath = path.join(projectPath, "app", "page.tsx");
+		const buttonPath = path.join(
+			projectPath,
+			"app",
+			"components",
+			"button.tsx",
+		);
+
+		const graph = new Map<string, DependencyNode>([
 			[
-				path.join(projectPath, "app", "page.tsx"),
+				pagePath,
 				{
-					filePath: path.join(projectPath, "app", "page.tsx"),
-					type: ComponentType.Server,
+					path: pagePath,
+					isClient: false,
+					dependencies: [],
+					importedBy: [],
+					isClientRoot: false,
 				},
 			],
 			[
-				path.join(projectPath, "app", "components", "button.tsx"),
+				buttonPath,
 				{
-					filePath: path.join(projectPath, "app", "components", "button.tsx"),
-					type: ComponentType.Client,
+					path: buttonPath,
+					isClient: true,
+					dependencies: [],
+					importedBy: [],
+					isClientRoot: true,
 				},
 			],
 		]);
-		const formatter = new OutputFormatter(components, projectPath);
+		const formatter = new OutputFormatter(graph, projectPath);
 
 		// Act
 		const output = formatter.format();
@@ -47,37 +61,59 @@ describe("OutputFormatter", () => {
 	it("should display summary counts for directories and total", () => {
 		// Arrange
 		const projectPath = path.resolve("/test-project");
-		const components = new Map<string, ClassifiedComponent>([
+		const pagePath = path.join(projectPath, "app", "page.tsx");
+		const layoutPath = path.join(projectPath, "app", "layout.tsx");
+		const buttonPath = path.join(
+			projectPath,
+			"app",
+			"components",
+			"button.tsx",
+		);
+		const cardPath = path.join(projectPath, "app", "components", "card.tsx");
+
+		const graph = new Map<string, DependencyNode>([
 			[
-				path.join(projectPath, "app", "page.tsx"),
+				pagePath,
 				{
-					filePath: path.join(projectPath, "app", "page.tsx"),
-					type: ComponentType.Server,
+					path: pagePath,
+					isClient: false,
+					dependencies: [],
+					importedBy: [],
+					isClientRoot: false,
 				},
 			],
 			[
-				path.join(projectPath, "app", "layout.tsx"),
+				layoutPath,
 				{
-					filePath: path.join(projectPath, "app", "layout.tsx"),
-					type: ComponentType.Server,
+					path: layoutPath,
+					isClient: false,
+					dependencies: [],
+					importedBy: [],
+					isClientRoot: false,
 				},
 			],
 			[
-				path.join(projectPath, "app", "components", "button.tsx"),
+				buttonPath,
 				{
-					filePath: path.join(projectPath, "app", "components", "button.tsx"),
-					type: ComponentType.Client,
+					path: buttonPath,
+					isClient: true,
+					dependencies: [],
+					importedBy: [],
+					isClientRoot: true,
 				},
 			],
 			[
-				path.join(projectPath, "app", "components", "card.tsx"),
+				cardPath,
 				{
-					filePath: path.join(projectPath, "app", "components", "card.tsx"),
-					type: ComponentType.Client,
+					path: cardPath,
+					isClient: true,
+					dependencies: [],
+					importedBy: [],
+					isClientRoot: true,
 				},
 			],
 		]);
-		const formatter = new OutputFormatter(components, projectPath);
+		const formatter = new OutputFormatter(graph, projectPath);
 
 		// Act
 		const output = formatter.format();
@@ -100,10 +136,11 @@ describe("OutputFormatter", () => {
 		expect(output.replace(/\\/g, "/")).toBe(expected.replace(/\\/g, "/"));
 	});
 
-	it("should throw an error if components map is not provided", () => {
+	it("should throw an error if graph map is not provided", () => {
 		// Arrange, Act, Assert
+		// @ts-expect-error We are intentionally passing an invalid type to test the constructor's error handling.
 		expect(() => new OutputFormatter(undefined)).toThrow(
-			"Components map must be provided to OutputFormatter.",
+			"Graph map must be provided to OutputFormatter.",
 		);
 	});
 });
