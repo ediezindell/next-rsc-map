@@ -1,4 +1,4 @@
-import path from "node:path";
+import * as path from "node:path";
 import { DependencyAnalyzer } from "./analyzer";
 import { ComponentClassifier } from "./classifier";
 import { OutputFormatter } from "./formatter";

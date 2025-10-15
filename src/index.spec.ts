@@ -1,4 +1,4 @@
-import path from "node:path";
+import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runAnalysis } from "./runner"; // Test the runner directly
 
