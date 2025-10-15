@@ -3,14 +3,16 @@ import { DependencyAnalyzer } from "./analyzer";
 import { ComponentClassifier } from "./classifier";
 import { OutputFormatter } from "./formatter";
 
+import { DependencyTracer } from "./tracer";
+
 export interface AnalysisOptions {
 	ignoreErrors?: boolean;
 }
 
 export async function runAnalysis(
 	projectPath: string,
-	options: AnalysisOptions = {},
-): Promise<string> {
+	options: { ignoreErrors?: boolean; why?: string },
+) {
 	if (!projectPath) {
 		throw new Error("Project path must be provided.");
 	}
@@ -33,6 +35,19 @@ export async function runAnalysis(
 		});
 		const classifier = new ComponentClassifier();
 		const classifiedComponents = classifier.classify(dependencyGraph);
+
+		if (options.why) {
+			const tracer = new DependencyTracer();
+			const chain = tracer.traceToClientRoot(dependencyGraph, options.why);
+
+			const formatter = new OutputFormatter(classifiedComponents, projectPath);
+			const output = formatter.formatWhyChain(chain, options.why);
+
+			console.log(output);
+
+			return ""; // Return empty string to signify completion
+		}
+
 		const formatter = new OutputFormatter(classifiedComponents, projectPath);
 		const output = formatter.format();
 		return output;

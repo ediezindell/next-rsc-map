@@ -23,15 +23,24 @@ export async function main(argv?: string[]) {
 			description: "Ignore TypeScript parsing errors",
 			default: false,
 		})
+		.option("why", {
+			type: "string",
+			description:
+				"Trace the dependency chain for a file to see why it is a client component.",
+			normalize: true,
+		})
 		.help()
 		.alias("h", "help").argv;
 
 	const projectPath = parsedArgv.projectPath as string;
 	const ignoreErrors = parsedArgv.ignoreErrors as boolean;
+	const why = parsedArgv.why as string | undefined;
 
 	try {
-		const output = await runAnalysis(projectPath, { ignoreErrors });
-		console.log(output);
+		const output = await runAnalysis(projectPath, { ignoreErrors, why });
+		if (output) {
+			console.log(output);
+		}
 	} catch (error) {
 		if (error instanceof Error) {
 			console.error(`Error: ${error.message}`);

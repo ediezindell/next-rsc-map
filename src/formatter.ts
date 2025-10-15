@@ -1,4 +1,5 @@
 import * as path from "node:path";
+import chalk from "chalk";
 import { type ClassifiedComponent, ComponentType } from "./classifier";
 
 interface TreeNode {
@@ -197,5 +198,32 @@ ${prefix}${connector} ${label}`;
 		]);
 
 		return iconMap.get(type) ?? "⚪️";
+	}
+
+	public formatWhyChain(chain: string[] | null, targetFile: string): string {
+		if (!chain || chain.length === 0) {
+			return `Could not find a client component dependency chain for ${targetFile}`;
+		}
+
+		const relativeChain = chain.map((p) => path.relative(this.projectPath, p));
+		const targetRelative = path.relative(this.projectPath, targetFile);
+
+		let output = `Trace for: ${chalk.bold(targetRelative)} is a Client Component.\n`;
+		output += `Dependency chain:\n\n`;
+
+		for (let i = 0; i < relativeChain.length; i++) {
+			const file = relativeChain[i];
+			const prefix = i === 0 ? "" : `${"  ".repeat(i)}└─▶ `;
+			let line = `${prefix}${file}`;
+
+			if (i === 0) {
+				line += chalk.yellow('  (contains "use client")');
+			}
+			if (file === targetRelative) {
+				line += chalk.cyan("  <- Target file");
+			}
+			output += `${line}\n`;
+		}
+		return output;
 	}
 }
