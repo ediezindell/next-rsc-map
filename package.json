@@ -13,6 +13,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest",
+    "typecheck": "tsc --noEmit",
     "check": "biome check --write src",
     "prepublishOnly": "npm run build"
   },
