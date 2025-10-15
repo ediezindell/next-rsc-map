@@ -1,6 +1,6 @@
 export interface DependencyNode {
 	path: string;
-	dependencies: string[];
+	dependencies: Set<string>;
 	importedBy: string[];
 	isClient: boolean;
 	isClientRoot: boolean;

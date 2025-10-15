@@ -99,14 +99,14 @@ export class DependencyAnalyzer {
 				continue;
 			}
 
-			const dependencies: string[] = [];
+			const dependencies = new Set<string>();
 
 			for (const importDeclaration of sourceFile.getImportDeclarations()) {
 				const resolvedModule = importDeclaration.getModuleSpecifierSourceFile();
 				if (resolvedModule) {
 					const dependencyPath = resolvedModule.getFilePath();
 					if (!dependencyPath.includes("/node_modules/")) {
-						dependencies.push(dependencyPath);
+						dependencies.add(dependencyPath);
 					}
 				}
 			}
