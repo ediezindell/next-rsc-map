@@ -1,4 +1,4 @@
-import type { DependencyNode } from "./analyzer";
+import type { DependencyNode } from "./types";
 
 export enum ComponentType {
 	Server = "server",
@@ -50,17 +50,19 @@ export class ComponentClassifier {
 				continue;
 			}
 
-			classified.set(currentPath, {
-				filePath: currentPath,
-				type: ComponentType.Client,
-			});
+			// Mark the current node as a client component
+			const component = classified.get(currentPath);
+			if (component) {
+				component.type = ComponentType.Client;
+			}
 
+			// Find all nodes that import the current node and add them to the queue
 			const node = graph.get(currentPath);
 			if (node) {
-				for (const dependencyPath of node.dependencies) {
-					if (!visited.has(dependencyPath)) {
-						visited.add(dependencyPath);
-						queue.push(dependencyPath);
+				for (const importerPath of node.importedBy) {
+					if (!visited.has(importerPath)) {
+						visited.add(importerPath);
+						queue.push(importerPath);
 					}
 				}
 			}

@@ -1,12 +1,7 @@
 import { join, resolve } from "node:path";
 import fg from "fast-glob";
 import { Node, Project, type ProjectOptions, type SourceFile } from "ts-morph";
-
-export interface DependencyNode {
-	filePath: string;
-	dependencies: Set<string>;
-	isClientRoot: boolean;
-}
+import type { DependencyNode } from "./types";
 
 export interface AnalyzerOptions {
 	glob: string[];
@@ -104,14 +99,14 @@ export class DependencyAnalyzer {
 				continue;
 			}
 
-			const dependencies = new Set<string>();
+			const dependencies: string[] = [];
 
 			for (const importDeclaration of sourceFile.getImportDeclarations()) {
 				const resolvedModule = importDeclaration.getModuleSpecifierSourceFile();
 				if (resolvedModule) {
 					const dependencyPath = resolvedModule.getFilePath();
 					if (!dependencyPath.includes("/node_modules/")) {
-						dependencies.add(dependencyPath);
+						dependencies.push(dependencyPath);
 					}
 				}
 			}
@@ -119,11 +114,24 @@ export class DependencyAnalyzer {
 			const isClientRoot = this._hasDirective(sourceFile, "use client");
 
 			graph.set(filePath, {
-				filePath,
+				path: filePath,
 				dependencies,
 				isClientRoot,
+				importedBy: [],
+				isClient: false, // Default value, will be updated by classifier
 			});
 		}
+
+		// Build the reverse dependency graph (importedBy)
+		for (const [filePath, node] of graph.entries()) {
+			for (const dependencyPath of node.dependencies) {
+				const dependencyNode = graph.get(dependencyPath);
+				if (dependencyNode) {
+					dependencyNode.importedBy.push(filePath);
+				}
+			}
+		}
+
 		return graph;
 	}
 

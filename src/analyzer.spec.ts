@@ -45,8 +45,8 @@ describe("analyze", () => {
 		// Assert
 		const mainFile = graph.get(mainPath);
 		const depFile = graph.get(depPath);
-		expect(mainFile?.dependencies.has(depPath)).toBe(true);
-		expect(depFile?.dependencies.size).toBe(0);
+		expect(mainFile?.dependencies.includes(depPath)).toBe(true);
+		expect(depFile?.dependencies.length).toBe(0);
 	});
 
 	it(`should detect "use client" directive`, async () => {
