@@ -37,11 +37,12 @@ export async function runAnalysis(
 		const classifiedComponents = classifier.classify(dependencyGraph);
 
 		if (options.why) {
+			const absoluteWhyPath = path.resolve(projectPath, options.why);
 			const tracer = new DependencyTracer();
-			const chain = tracer.traceToClientRoot(dependencyGraph, options.why);
+			const chain = tracer.traceToClientRoot(dependencyGraph, absoluteWhyPath);
 
 			const formatter = new OutputFormatter(classifiedComponents, projectPath);
-			const output = formatter.formatWhyChain(chain, options.why);
+			const output = formatter.formatWhyChain(chain, absoluteWhyPath);
 
 			console.log(output);
 
