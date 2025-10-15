@@ -12,28 +12,17 @@ export interface ClassifiedComponent {
 }
 
 export class ComponentClassifier {
-	classify(
-		graph: Map<string, DependencyNode>,
-	): Map<string, ClassifiedComponent> {
-		const classified = this._initializeAsServerComponents(graph);
-		this._propagateClientStatus(graph, classified);
-		return classified;
-	}
-
-	private _initializeAsServerComponents(
-		graph: Map<string, DependencyNode>,
-	): Map<string, ClassifiedComponent> {
-		const classified = new Map<string, ClassifiedComponent>();
-		for (const filePath of graph.keys()) {
-			classified.set(filePath, { filePath, type: ComponentType.Server });
+	classify(graph: Map<string, DependencyNode>): Map<string, DependencyNode> {
+		// First, reset and assume all are server components
+		for (const node of graph.values()) {
+			node.isClient = false;
 		}
-		return classified;
+
+		this._propagateClientStatus(graph);
+		return graph;
 	}
 
-	private _propagateClientStatus(
-		graph: Map<string, DependencyNode>,
-		classified: Map<string, ClassifiedComponent>,
-	): void {
+	private _propagateClientStatus(graph: Map<string, DependencyNode>): void {
 		const clientRoots = new Set<string>();
 		for (const [filePath, node] of graph.entries()) {
 			if (node.isClientRoot) {
@@ -50,10 +39,10 @@ export class ComponentClassifier {
 				continue;
 			}
 
-			classified.set(currentPath, {
-				filePath: currentPath,
-				type: ComponentType.Client,
-			});
+			const nodeToUpdate = graph.get(currentPath);
+			if (nodeToUpdate) {
+				nodeToUpdate.isClient = true;
+			}
 
 			const node = graph.get(currentPath);
 			if (node) {

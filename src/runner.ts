@@ -34,14 +34,17 @@ export async function runAnalysis(
 			ignoreErrors: options.ignoreErrors,
 		});
 		const classifier = new ComponentClassifier();
-		const classifiedComponents = classifier.classify(dependencyGraph);
+		const classifiedGraph = classifier.classify(dependencyGraph);
 
 		if (options.why) {
-			const absoluteWhyPath = path.resolve(projectPath, options.why);
-			const tracer = new DependencyTracer();
-			const chain = tracer.traceToClientRoot(dependencyGraph, absoluteWhyPath);
+			const absoluteWhyPath = path.isAbsolute(options.why)
+				? options.why
+				: path.resolve(projectPath, options.why);
 
-			const formatter = new OutputFormatter(classifiedComponents, projectPath);
+			const tracer = new DependencyTracer();
+			const chain = tracer.traceToClientRoot(classifiedGraph, absoluteWhyPath);
+
+			const formatter = new OutputFormatter(classifiedGraph, projectPath);
 			const output = formatter.formatWhyChain(chain, absoluteWhyPath);
 
 			console.log(output);
@@ -49,7 +52,7 @@ export async function runAnalysis(
 			return ""; // Return empty string to signify completion
 		}
 
-		const formatter = new OutputFormatter(classifiedComponents, projectPath);
+		const formatter = new OutputFormatter(classifiedGraph, projectPath);
 		const output = formatter.format();
 		return output;
 	} catch (error) {

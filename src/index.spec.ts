@@ -30,15 +30,17 @@ describe("Integration Test", () => {
 		// This reflects the corrected classification logic
 		const expectedTree = [
 			expectedTreeHeader,
-			"└── 📁 app (🔴 2, 🟢 3)",
-			"   ├── 📁 components (🔴 2, 🟢 1)",
+			"└── 📁 app (🔴 3, 🟢 3)",
+			"   ├── 📁 components (🔴 3, 🟢 1)",
 			"   │  ├── 🔴 another-client-component.tsx",
 			"   │  ├── 🔴 client-component.tsx",
+			"   │  ├── 📁 common (🔴 1)",
+			"   │  │  └── 🔴 Timestamp.tsx",
 			"   │  └── 🟢 server-component.tsx",
 			"   ├── 🟢 layout.tsx",
 			"   └── 🟢 page.tsx",
 			"",
-			"Total: 🔴 2, 🟢 3",
+			"Total: 🔴 3, 🟢 3",
 			"",
 			"🔴: Client Component",
 			"🟢: Server Component",
@@ -85,10 +87,14 @@ describe("Integration Test", () => {
 		expect(normalizedOutput).toEqual(expectedTree);
 	});
 
-	it("should log the dependency chain when --why is used", async () => {
+	it("should log the dependency chain when --why is used for a propagated client module", async () => {
 		// Arrange
 		const projectPath = path.resolve("tests/fixtures/sample-next-project");
-		const targetFile = path.join(projectPath, "app/page.tsx");
+		// Target the new utils.ts file, which is a client module due to being imported by a client component.
+		const targetFile = path.join(
+			projectPath,
+			"app/components/common/Timestamp.tsx",
+		);
 
 		// Act
 		await runAnalysis(projectPath, { ignoreErrors: true, why: targetFile });
@@ -96,6 +102,7 @@ describe("Integration Test", () => {
 		// Assert
 		const logOutput = consoleLogSpy.mock.calls.map((c) => c[0]).join("\n");
 
+		// The root of this chain is client-component.tsx
 		const clientRoot = path.join(
 			projectPath,
 			"app/components/client-component.tsx",
@@ -103,7 +110,7 @@ describe("Integration Test", () => {
 		const relativeTarget = path.relative(projectPath, targetFile);
 		const relativeRoot = path.relative(projectPath, clientRoot);
 
-		// Construct the expected formatted output
+		// Construct the correct expected output for the new target
 		const expectedOutput = [
 			`Dependency trace for ${relativeTarget} to a 'use client' boundary:`,
 			`Dependency chain:`,

@@ -1,27 +1,25 @@
 import * as path from "node:path";
 import chalk from "chalk";
-import { type ClassifiedComponent, ComponentType } from "./classifier";
+import { ComponentType } from "./classifier";
+import type { DependencyNode } from "./types";
 
 interface TreeNode {
 	name: string;
-	component?: ClassifiedComponent;
+	component?: DependencyNode;
 	children: Map<string, TreeNode>;
 	summary: Map<ComponentType, number>;
 }
 
 export class OutputFormatter {
-	private components: Map<string, ClassifiedComponent>;
+	private graph: Map<string, DependencyNode>;
 	private projectPath: string;
-	constructor(
-		components: Map<string, ClassifiedComponent>,
-		projectPath?: string,
-	) {
-		if (!components) {
-			throw new Error("Components map must be provided to OutputFormatter.");
+	constructor(graph: Map<string, DependencyNode>, projectPath?: string) {
+		if (!graph) {
+			throw new Error("Graph map must be provided to OutputFormatter.");
 		}
-		this.components = components;
+		this.graph = graph;
 		this.projectPath =
-			projectPath ?? this._findCommonBasePath([...components.keys()]);
+			projectPath ?? this._findCommonBasePath([...graph.keys()]);
 	}
 
 	format(): string {
@@ -66,13 +64,8 @@ ${this._getIcon(ComponentType.Server)}: Server Component`;
 			summary: new Map(),
 		};
 
-		const componentList = [...this.components.values()];
-		const _relativePaths = componentList.map((c) =>
-			path.relative(this.projectPath, c.filePath),
-		);
-
-		for (const component of this.components.values()) {
-			const relativePath = path.relative(this.projectPath, component.filePath);
+		for (const component of this.graph.values()) {
+			const relativePath = path.relative(this.projectPath, component.path);
 			const pathParts = relativePath.split(path.sep);
 
 			let currentNode = root;
@@ -87,8 +80,6 @@ ${this._getIcon(ComponentType.Server)}: Server Component`;
 				}
 				const nextNode = currentNode.children.get(part);
 				if (!nextNode) {
-					// This should not happen based on the logic above,
-					// but it satisfies the linter and acts as a safeguard.
 					throw new Error(
 						`Unexpected error: nextNode is undefined for part '${part}'`,
 					);
@@ -106,7 +97,10 @@ ${this._getIcon(ComponentType.Server)}: Server Component`;
 
 	private _calculateSummary(node: TreeNode): void {
 		if (node.component) {
-			node.summary.set(node.component.type, 1);
+			const type = node.component.isClient
+				? ComponentType.Client
+				: ComponentType.Server;
+			node.summary.set(type, 1);
 			return;
 		}
 
@@ -147,7 +141,7 @@ ${this._getIcon(ComponentType.Server)}: Server Component`;
 
 	private _shouldDisplay(node: TreeNode): boolean {
 		if (node.component) {
-			const { filePath } = node.component;
+			const { path: filePath } = node.component;
 			return filePath.endsWith(".tsx") || filePath.endsWith(".jsx");
 		}
 
@@ -173,7 +167,10 @@ ${this._getIcon(ComponentType.Server)}: Server Component`;
 			const connector = isLast ? "└──" : "├──";
 			const newPrefix = prefix + (isLast ? "   " : "│  ");
 
-			const icon = child.component ? this._getIcon(child.component.type) : "📁";
+			const type = child.component?.isClient
+				? ComponentType.Client
+				: ComponentType.Server;
+			const icon = child.component ? this._getIcon(type) : "📁";
 			const summary = child.component
 				? ""
 				: this._formatSummaryString(child.summary, { useParens: true });
