@@ -1,4 +1,4 @@
-import type { DependencyNode } from "./analyzer";
+import type { DependencyNode } from "./types";
 
 export enum ComponentType {
 	Server = "server",

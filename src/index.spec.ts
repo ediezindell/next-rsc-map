@@ -84,4 +84,33 @@ describe("Integration Test", () => {
 
 		expect(normalizedOutput).toEqual(expectedTree);
 	});
+
+	it("should log the dependency chain when --why is used", async () => {
+		// Arrange
+		const projectPath = path.resolve("tests/fixtures/sample-next-project");
+		const targetFile = path.join(projectPath, "app/page.tsx");
+
+		// Act
+		await runAnalysis(projectPath, { ignoreErrors: true, why: targetFile });
+
+		// Assert
+		const logOutput = consoleLogSpy.mock.calls.map((c) => c[0]).join("\n");
+
+		const clientRoot = path.join(
+			projectPath,
+			"app/components/client-component.tsx",
+		);
+		const relativeTarget = path.relative(projectPath, targetFile);
+		const relativeRoot = path.relative(projectPath, clientRoot);
+
+		// Construct the expected formatted output
+		const expectedOutput = [
+			`Dependency trace for ${relativeTarget} to a 'use client' boundary:`,
+			`Dependency chain:`,
+			``,
+			`${relativeRoot}  (contains "use client")`,
+			`  └─▶ ${relativeTarget}  <- Target file`,
+		].join("\n");
+		expect(logOutput).toContain(expectedOutput);
+	});
 });
