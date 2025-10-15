@@ -39,8 +39,8 @@ ${totalSummary}`;
 
 		output += `
 
-${this._getIcon(ComponentType.Server)}: Server Component
-${this._getIcon(ComponentType.Client)}: Client Component`;
+${this._getIcon(ComponentType.Client)}: Client Component
+${this._getIcon(ComponentType.Server)}: Server Component`;
 
 		return output;
 	}

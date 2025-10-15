@@ -38,8 +38,8 @@ describe("OutputFormatter", () => {
 			"",
 			"Total: 🔴 1, 🟢 1",
 			"",
-			"🟢: Server Component",
 			"🔴: Client Component",
+			"🟢: Server Component",
 		].join("\n");
 		expect(output.replace(/\\/g, "/")).toBe(expected.replace(/\\/g, "/"));
 	});
@@ -94,15 +94,14 @@ describe("OutputFormatter", () => {
 			"",
 			"Total: 🔴 2, 🟢 2",
 			"",
-			"🟢: Server Component",
 			"🔴: Client Component",
+			"🟢: Server Component",
 		].join("\n");
 		expect(output.replace(/\\/g, "/")).toBe(expected.replace(/\\/g, "/"));
 	});
 
 	it("should throw an error if components map is not provided", () => {
 		// Arrange, Act, Assert
-		// @ts-expect-error - Testing invalid input
 		expect(() => new OutputFormatter(undefined)).toThrow(
 			"Components map must be provided to OutputFormatter.",
 		);

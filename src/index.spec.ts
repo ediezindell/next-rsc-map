@@ -40,8 +40,8 @@ describe("Integration Test", () => {
 			"",
 			"Total: 🔴 2, 🟢 3",
 			"",
-			"🟢: Server Component",
 			"🔴: Client Component",
+			"🟢: Server Component",
 		];
 
 		// Check the "Analyzing..." log message which is logged separately
@@ -78,8 +78,8 @@ describe("Integration Test", () => {
 			"",
 			"Total: 🟢 1",
 			"",
-			"🟢: Server Component",
 			"🔴: Client Component",
+			"🟢: Server Component",
 		].join("\n");
 
 		expect(normalizedOutput).toEqual(expectedTree);

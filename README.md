@@ -36,8 +36,8 @@ my-next-app
 
 Total: 🔴 1, 🟢 2
 
-🟢: Server Component
 🔴: Client Component
+🟢: Server Component
 ```
 
 ## オプション
