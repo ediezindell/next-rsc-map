@@ -202,13 +202,15 @@ ${prefix}${connector} ${label}`;
 
 	public formatWhyChain(chain: string[] | null, targetFile: string): string {
 		if (!chain || chain.length === 0) {
-			return `Could not find a client component dependency chain for ${targetFile}`;
+			return `No dependency chain to a 'use client' boundary found for ${targetFile}`;
 		}
 
 		const relativeChain = chain.map((p) => path.relative(this.projectPath, p));
 		const targetRelative = path.relative(this.projectPath, targetFile);
 
-		let output = `Trace for: ${chalk.bold(targetRelative)} is a Client Component.\n`;
+		let output = `Dependency trace for ${chalk.bold(
+			targetRelative,
+		)} to a 'use client' boundary:\n`;
 		output += `Dependency chain:\n\n`;
 
 		for (let i = 0; i < relativeChain.length; i++) {

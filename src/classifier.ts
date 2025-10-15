@@ -50,19 +50,17 @@ export class ComponentClassifier {
 				continue;
 			}
 
-			// Mark the current node as a client component
-			const component = classified.get(currentPath);
-			if (component) {
-				component.type = ComponentType.Client;
-			}
+			classified.set(currentPath, {
+				filePath: currentPath,
+				type: ComponentType.Client,
+			});
 
-			// Find all nodes that import the current node and add them to the queue
 			const node = graph.get(currentPath);
 			if (node) {
-				for (const importerPath of node.importedBy) {
-					if (!visited.has(importerPath)) {
-						visited.add(importerPath);
-						queue.push(importerPath);
+				for (const dependencyPath of node.dependencies) {
+					if (!visited.has(dependencyPath)) {
+						visited.add(dependencyPath);
+						queue.push(dependencyPath);
 					}
 				}
 			}

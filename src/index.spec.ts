@@ -31,12 +31,12 @@ describe("Integration Test", () => {
 		const expectedTree = [
 			expectedTreeHeader,
 			"└── 📁 app (🔴 2, 🟢 3)",
-			"   ├── 📁 components (🔴 1, 🟢 2)",
-			"   │  ├── 🟢 another-client-component.tsx",
+			"   ├── 📁 components (🔴 2, 🟢 1)",
+			"   │  ├── 🔴 another-client-component.tsx",
 			"   │  ├── 🔴 client-component.tsx",
 			"   │  └── 🟢 server-component.tsx",
 			"   ├── 🟢 layout.tsx",
-			"   └── 🔴 page.tsx",
+			"   └── 🟢 page.tsx",
 			"",
 			"Total: 🔴 2, 🟢 3",
 			"",
@@ -105,7 +105,7 @@ describe("Integration Test", () => {
 
 		// Construct the expected formatted output
 		const expectedOutput = [
-			`Trace for: ${relativeTarget} is a Client Component.`,
+			`Dependency trace for ${relativeTarget} to a 'use client' boundary:`,
 			`Dependency chain:`,
 			``,
 			`${relativeRoot}  (contains "use client")`,
