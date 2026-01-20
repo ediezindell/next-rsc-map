@@ -30,11 +30,13 @@ export class ComponentClassifier {
 			}
 		}
 
-		const queue = [...clientRoots];
+		const stack = [...clientRoots];
 		const visited = new Set<string>(clientRoots);
 
-		while (queue.length > 0) {
-			const currentPath = queue.shift();
+		while (stack.length > 0) {
+			// Use pop() instead of shift() for O(1) operation.
+			// This changes traversal from BFS to DFS, but reachability remains the same.
+			const currentPath = stack.pop();
 			if (!currentPath) {
 				continue;
 			}
@@ -49,7 +51,7 @@ export class ComponentClassifier {
 				for (const dependencyPath of node.dependencies) {
 					if (!visited.has(dependencyPath)) {
 						visited.add(dependencyPath);
-						queue.push(dependencyPath);
+						stack.push(dependencyPath);
 					}
 				}
 			}
