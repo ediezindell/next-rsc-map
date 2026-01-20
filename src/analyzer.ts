@@ -1,6 +1,6 @@
 import { join, resolve } from "node:path";
 import fg from "fast-glob";
-import { Node, Project, type ProjectOptions, type SourceFile } from "ts-morph";
+import { Project, type ProjectOptions, type SourceFile, ts } from "ts-morph";
 import type { DependencyNode } from "./types";
 
 export interface AnalyzerOptions {
@@ -136,11 +136,18 @@ export class DependencyAnalyzer {
 	}
 
 	private _hasDirective(sourceFile: SourceFile, directive: string): boolean {
-		const firstStatement = sourceFile.getStatements()[0];
-		if (Node.isExpressionStatement(firstStatement)) {
-			const expression = firstStatement.getExpression();
-			if (Node.isStringLiteral(expression)) {
-				return expression.getLiteralValue() === directive;
+		// Optimization: Access compilerNode directly to avoid overhead of creating ts-morph wrappers
+		// for every statement. This is significantly faster for this hot path.
+		const statements = sourceFile.compilerNode.statements;
+		if (statements.length === 0) {
+			return false;
+		}
+
+		const firstStatement = statements[0];
+		if (ts.isExpressionStatement(firstStatement)) {
+			const expression = firstStatement.expression;
+			if (ts.isStringLiteral(expression)) {
+				return expression.text === directive;
 			}
 		}
 		return false;

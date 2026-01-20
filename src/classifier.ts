@@ -41,13 +41,9 @@ export class ComponentClassifier {
 				continue;
 			}
 
-			const nodeToUpdate = graph.get(currentPath);
-			if (nodeToUpdate) {
-				nodeToUpdate.isClient = true;
-			}
-
 			const node = graph.get(currentPath);
 			if (node) {
+				node.isClient = true;
 				for (const dependencyPath of node.dependencies) {
 					if (!visited.has(dependencyPath)) {
 						visited.add(dependencyPath);
