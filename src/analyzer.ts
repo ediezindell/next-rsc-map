@@ -93,6 +93,11 @@ export class DependencyAnalyzer {
 		}
 
 		const graph = new Map<string, DependencyNode>();
+
+		// Optimization: Create host once for module resolution to be used in the loop
+		const compilerOptions = project.getCompilerOptions();
+		const host = ts.createCompilerHost(compilerOptions);
+
 		for (const sourceFile of project.getSourceFiles()) {
 			const filePath = sourceFile.getFilePath();
 			if (filePath.includes("/node_modules/")) {
@@ -101,12 +106,33 @@ export class DependencyAnalyzer {
 
 			const dependencies = new Set<string>();
 
-			for (const importDeclaration of sourceFile.getImportDeclarations()) {
-				const resolvedModule = importDeclaration.getModuleSpecifierSourceFile();
-				if (resolvedModule) {
-					const dependencyPath = resolvedModule.getFilePath();
-					if (!dependencyPath.includes("/node_modules/")) {
-						dependencies.add(dependencyPath);
+			// Optimization: Iterate compiler nodes directly and resolve manually
+			// This avoids creating ts-morph wrappers (ImportDeclaration) and using slow internal resolution
+			// logic which creates TypeChecker overhead.
+			for (const statement of sourceFile.compilerNode.statements) {
+				if (ts.isImportDeclaration(statement)) {
+					if (
+						statement.moduleSpecifier &&
+						ts.isStringLiteral(statement.moduleSpecifier)
+					) {
+						const moduleName = statement.moduleSpecifier.text;
+						const resolved = ts.resolveModuleName(
+							moduleName,
+							filePath,
+							compilerOptions,
+							host,
+						);
+
+						if (resolved.resolvedModule) {
+							// Fix: Normalize path for Windows compatibility
+							const dependencyPath = resolved.resolvedModule.resolvedFileName.replace(
+								/\\/g,
+								"/",
+							);
+							if (!dependencyPath.includes("/node_modules/")) {
+								dependencies.add(dependencyPath);
+							}
+						}
 					}
 				}
 			}
