@@ -10,30 +10,33 @@ export class DependencyTracer {
 			return null;
 		}
 
-		const queue: { path: string; chain: string[] }[] = [
-			{ path: targetFile, chain: [targetFile] },
+		const queue: { path: string; parentIndex: number }[] = [
+			{ path: targetFile, parentIndex: -1 },
 		];
 		const visited = new Set<string>([targetFile]);
+		let head = 0;
 
-		while (queue.length > 0) {
-			const nextInQueue = queue.shift();
-			if (!nextInQueue) {
-				continue;
-			}
-			const { path: currentPath, chain: currentChain } = nextInQueue;
+		while (head < queue.length) {
+			const { path: currentPath } = queue[head++];
 			const currentNode = graph.get(currentPath);
 
 			if (currentNode?.isClientRoot) {
 				// We found the root of the client component chain.
-				return currentChain;
+				// Reconstruct the chain from the queue using parent pointers
+				const chain: string[] = [];
+				let currentIdx = head - 1;
+				while (currentIdx !== -1) {
+					chain.push(queue[currentIdx].path);
+					currentIdx = queue[currentIdx].parentIndex;
+				}
+				return chain;
 			}
 
 			if (currentNode) {
 				for (const importerPath of currentNode.importedBy) {
 					if (!visited.has(importerPath)) {
 						visited.add(importerPath);
-						const newChain = [importerPath, ...currentChain];
-						queue.push({ path: importerPath, chain: newChain });
+						queue.push({ path: importerPath, parentIndex: head - 1 });
 					}
 				}
 			}

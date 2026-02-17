@@ -97,6 +97,11 @@ export class DependencyAnalyzer {
 		// Optimization: Create host once for module resolution to be used in the loop
 		const compilerOptions = project.getCompilerOptions();
 		const host = ts.createCompilerHost(compilerOptions);
+		const moduleResolutionCache = ts.createModuleResolutionCache(
+			this.projectPath,
+			host.getCanonicalFileName,
+			compilerOptions,
+		);
 
 		for (const sourceFile of project.getSourceFiles()) {
 			const filePath = sourceFile.getFilePath();
@@ -121,14 +126,13 @@ export class DependencyAnalyzer {
 							filePath,
 							compilerOptions,
 							host,
+							moduleResolutionCache,
 						);
 
 						if (resolved.resolvedModule) {
 							// Fix: Normalize path for Windows compatibility
-							const dependencyPath = resolved.resolvedModule.resolvedFileName.replace(
-								/\\/g,
-								"/",
-							);
+							const dependencyPath =
+								resolved.resolvedModule.resolvedFileName.replace(/\\/g, "/");
 							if (!dependencyPath.includes("/node_modules/")) {
 								dependencies.add(dependencyPath);
 							}
